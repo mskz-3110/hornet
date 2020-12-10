@@ -1,0 +1,106 @@
+anchors:
+  configuration: &configuration
+    c_flags:
+    cxx_flags:
+    exe_linker_flags:
+    static_linker_flags:
+    shared_linker_flags:
+    link_dirs:
+    link_libs:
+  xcode_configuration: &xcode_configuration
+    <<: *configuration
+    c_flags: -g -Wall -fembed-bitcode
+    cxx_flags: -g -Wall -fembed-bitcode
+  android_configuration: &android_configuration
+    <<: *configuration
+    c_flags: -g -Wall
+    cxx_flags: -g -Wall -fexceptions -frtti
+  linux_configuration: &linux_configuration
+    <<: *configuration
+    c_flags: -g -Wall
+    cxx_flags: -g -Wall
+  windows_configuration: &windows_configuration
+    <<: *configuration
+    c_flags: /W4
+    cxx_flags: /W4
+  macos_targets: &macos_targets
+    - x86_64
+  ios_targets: &ios_targets
+    - iphonesimulator.x86_64
+    - iphoneos.arm64
+  android_targets: &android_targets
+    - x86
+    - armeabi-v7a
+    - arm64-v8a
+  linux_targets: &linux_targets
+    - x86_64
+  windows_targets: &windows_targets
+    - 2017.MD.Win32
+    - 2017.MD.x64
+    - 2017.MT.Win32
+    - 2017.MT.x64
+    - 2017.ARM.Win32
+    - 2017.ARM.x64
+    - 2017.ARM64.Win32
+    - 2017.ARM64.x64
+  platforms: &platforms
+    macos:
+      targets: *macos_targets
+      configurations:
+        debug:
+          <<: *xcode_configuration
+        release:
+          <<: *xcode_configuration
+    ios:
+      targets: *ios_targets
+      configurations:
+        debug:
+          <<: *xcode_configuration
+        release:
+          <<: *xcode_configuration
+    android:
+      targets: *android_targets
+      configurations:
+        debug:
+          <<: *android_configuration
+        release:
+          <<: *android_configuration
+    linux:
+      targets: *linux_targets
+      configurations:
+        debug:
+          <<: *linux_configuration
+        release:
+          <<: *linux_configuration
+    windows:
+      targets: *windows_targets
+      configurations:
+        debug:
+          <<: *windows_configuration
+        release:
+          <<: *windows_configuration
+  build_exe: &build_exe
+    type: exe
+    inc_dirs:
+      - ./inc
+  build_lib: &build_lib
+    type: lib
+    inc_dirs:
+      - ./inc
+buildrake:
+  cmake_version: 2.8
+  builds:
+    - <<: *build_lib
+      name: hornet
+      srcs:
+        - ./src/hornet.c
+        - ./src/hornet/io.c
+        - ./src/hornet/memory.c
+        - ./src/hornet/string.c
+        - ./src/hornet/socket_address.c
+        - ./src/hornet/socket.c
+        - ./src/hornet/poll.c
+        - ./src/hornet/time.c
+      platforms:
+        <<: *platforms
+
