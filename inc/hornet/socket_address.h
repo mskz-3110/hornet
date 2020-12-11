@@ -8,9 +8,9 @@
 
 // [cc:enum_name] Type
 typedef enum {
-  HORNET_SOCKET_ADDRESS_TYPE_NONE     = 0, // [cc:enum_value] NONE = 0
-  HORNET_SOCKET_ADDRESS_TYPE_DATAGRAM = 1, // [cc:enum_value] DATAGRAM = 1
-  HORNET_SOCKET_ADDRESS_TYPE_STREAM   = 2, // [cc:enum_value] STREAM = 2
+  HORNET_SOCKET_ADDRESS_TYPE_NONE = 0, // [cc:enum_value] NONE = 0
+  HORNET_SOCKET_ADDRESS_TYPE_UDP  = 1, // [cc:enum_value] UDP = 1
+  HORNET_SOCKET_ADDRESS_TYPE_TCP  = 2, // [cc:enum_value] TCP = 2
 } HornetSocketAddressType;
 
 typedef struct {
@@ -26,10 +26,12 @@ typedef struct {
 
 typedef struct {
   HornetString*         protocol;
+  HornetString*         host;
+  HornetString*         port;
   HornetString*         path;
+  HornetString*         errmsg;
   int32                 addresses_count;
   HornetSocketAddress** addresses;
-  HornetString*         errmsg;
 } HornetSocketAddressResolveResult;
 
 // [cc:callback] void ResolveResultCallback( IntPtr data, IntPtr result )
@@ -54,11 +56,20 @@ C_API_BEGIN
   // [cc:api] int hornet_socket_address_get_address_size( IntPtr address )
   C_API int32 hornet_socket_address_get_address_size( HornetSocketAddress* address );
   
-  // [cc:api] void hornet_socket_address_resolve( string url, ResolveResultCallback callback, IntPtr data )
-  C_API void hornet_socket_address_resolve( string url, HornetSocketAddressResolveResultCallback callback, void* data );
+  // [cc:api] void hornet_socket_address_to_string( IntPtr address, IntPtr _string )
+  C_API void hornet_socket_address_to_string( HornetSocketAddress* address, HornetString* string );
+  
+  // [cc:api] void hornet_socket_address_resolve( string url, ResolveResultCallback result_callback, IntPtr data )
+  C_API void hornet_socket_address_resolve( string url, HornetSocketAddressResolveResultCallback result_callback, void* data );
   
   // [cc:api] string hornet_socket_address_resolve_result_get_protocol( IntPtr result )
   C_API string hornet_socket_address_resolve_result_get_protocol( HornetSocketAddressResolveResult* result );
+  
+  // [cc:api] string hornet_socket_address_resolve_result_get_host( IntPtr result )
+  C_API string hornet_socket_address_resolve_result_get_host( HornetSocketAddressResolveResult* result );
+  
+  // [cc:api] string hornet_socket_address_resolve_result_get_port( IntPtr result )
+  C_API string hornet_socket_address_resolve_result_get_port( HornetSocketAddressResolveResult* result );
   
   // [cc:api] string hornet_socket_address_resolve_result_get_path( IntPtr result )
   C_API string hornet_socket_address_resolve_result_get_path( HornetSocketAddressResolveResult* result );

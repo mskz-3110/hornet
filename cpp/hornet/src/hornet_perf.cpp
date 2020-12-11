@@ -59,11 +59,11 @@ public:
   std::vector< Connection* > Connections;
 };
 
-static void on_stream_socket_standby_event( HornetSocket* socket, int32 events ){
+static void on_tcp_socket_standby_event( HornetSocket* socket, int32 events ){
   // TODO
 }
 
-static void on_datagram_socket_standby_event( HornetSocket* socket, int32 events ){
+static void on_udp_socket_standby_event( HornetSocket* socket, int32 events ){
   // TODO
 }
 
@@ -80,29 +80,27 @@ static void on_address_resolve( void* _arg, HornetSocketAddressResolveResult* re
   do{
     int32 addresses_count = hornet_socket_address_resolve_result_get_addresses_count( result );
     printf( "Resolved address: %d\n", addresses_count );
-    if ( addresses_count <= 0 ){
-      // TODO
-      break;
-    }
+    if ( addresses_count <= 0 ) break;
     
-    hornet_string_clear( arg->LogString );
     for ( int32 i = 0; i < addresses_count; ++i ){
-      // TODO
+      hornet_string_clear( arg->LogString );
+      hornet_socket_address_to_string( hornet_socket_address_resolve_result_get_address( result, i ), arg->LogString );
       printf( "[%d]: %s\n", i, hornet_string_get_string( arg->LogString ) );
     }
+    break; // TODO
     
-    HornetSocketAddress* address = hornet_socket_address_resolve_result_get_address( result, 0 );
+    HornetSocketAddress* address = hornet_socket_address_clone( hornet_socket_address_resolve_result_get_address( result, 0 ) );
     HornetSocketAddressType type = hornet_socket_address_get_type( address );
     if ( 0 == arg->ConnectionNumMax ){
       arg->ServerSocket = hornet_socket_new( arg->Poll, address );
       if ( null == arg->ServerSocket ) break;
       if ( ! hornet_socket_standby( arg->ServerSocket ) ) break;
-      if ( HORNET_SOCKET_ADDRESS_TYPE_STREAM == type ){
-        hornet_socket_set_event_callback( arg->ServerSocket, on_stream_socket_standby_event );
+      if ( HORNET_SOCKET_ADDRESS_TYPE_TCP == type ){
+        hornet_socket_set_event_callback( arg->ServerSocket, on_tcp_socket_standby_event );
       }else{
-        hornet_socket_set_event_callback( arg->ServerSocket, on_datagram_socket_standby_event );
+        hornet_socket_set_event_callback( arg->ServerSocket, on_udp_socket_standby_event );
       }
-    }else if ( HORNET_SOCKET_ADDRESS_TYPE_DATAGRAM == type ){
+    }else if ( HORNET_SOCKET_ADDRESS_TYPE_UDP == type ){
       for ( int32 i = 0; i < arg->ConnectionNumMax; ++i ){
         HornetSocket* socket = hornet_socket_new( arg->Poll, address );
         if ( null == socket ) break;
@@ -112,7 +110,7 @@ static void on_address_resolve( void* _arg, HornetSocketAddressResolveResult* re
         hornet_socket_set_event_callback( socket, on_socket_standalone_event );
         arg->Connections.push_back( new Connection( socket ) );
       }
-    }else if ( HORNET_SOCKET_ADDRESS_TYPE_STREAM == type ){
+    }else if ( HORNET_SOCKET_ADDRESS_TYPE_TCP == type ){
       for ( int32 i = 0; i < arg->ConnectionNumMax; ++i ){
         HornetSocket* socket = hornet_socket_new( arg->Poll, address );
         if ( null == socket ) break;
@@ -151,8 +149,8 @@ static bool on_init( Arg* arg ){
     arg->WriteBytes[ sizeof( Header ) + i ] = 0xFF - (i % 0xFF);
   }
   
-  hornet_socket_address_resolve( arg->Url, on_address_resolve, arg );
   arg->IsUpdate = true;
+  hornet_socket_address_resolve( arg->Url, on_address_resolve, arg );
   return true;
 }
 

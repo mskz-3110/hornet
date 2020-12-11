@@ -28,16 +28,8 @@ HornetSocket* hornet_socket_new( HornetPoll* poll, HornetSocketAddress* address 
 
 void hornet_socket_delete( HornetSocket* socket ){
   if ( null != socket ){
-    if ( null != socket->self_address ){
-      hornet_socket_address_delete( socket->self_address );
-      socket->self_address = null;
-    }
-    
-    if ( null != socket->peer_address ){
-      hornet_socket_address_delete( socket->peer_address );
-      socket->peer_address = null;
-    }
-    
+    hornet_socket_address_delete( socket->self_address );
+    hornet_socket_address_delete( socket->peer_address );
     C_MEMORY_FREE( socket );
   }
 }

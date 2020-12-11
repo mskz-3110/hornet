@@ -1,5 +1,6 @@
 #include <hornet.h>
 #include <sys/time.h>
+#include <ctype.h>
 
 static string s_string_empty = "";
 
@@ -84,10 +85,8 @@ void hornet_string_delete( HornetString* string ){
     if ( 0 < string->max_size ){
       if ( null != string->string ){
         C_MEMORY_FREE( string->string );
-        string->string = null;
       }
     }
-    
     C_MEMORY_FREE( string );
   }
 }
@@ -151,6 +150,24 @@ void hornet_string_remove( HornetString* string, int32 length ){
   }
 }
 
+void hornet_string_to_lower( HornetString* string, int32 offset, int32 length ){
+  if ( string->length <= offset ) return;
+  if ( string->length < offset + length ) return;
+  
+  for ( int32 i = 0; i < length; ++i ){
+    string->string[ offset + i ] = tolower( string->string[ offset + i ] );
+  }
+}
+
+void hornet_string_to_upper( HornetString* string, int32 offset, int32 length ){
+  if ( string->length <= offset ) return;
+  if ( string->length < offset + length ) return;
+  
+  for ( int32 i = 0; i < length; ++i ){
+    string->string[ offset + i ] = toupper( string->string[ offset + i ] );
+  }
+}
+
 string hornet_string_get_empty(){
   return s_string_empty;
 }
@@ -162,4 +179,21 @@ HornetString hornet_string_fixed( char* fixed_string, int max_size ){
   string.string = fixed_string;
   hornet_string_clear( &string );
   return string;
+}
+
+HornetStringParseResult hornet_string_parse( String string, String delimiter ){
+  HornetStringParseResult result;
+  int32 length = strlen( string );
+  result.left_string = string;
+  result.left_length = length;
+  result.right_string = &(string[ length ]);
+  result.right_length = 0;
+  char* right_string = strstr( string, delimiter );
+  if ( null != right_string ){
+    result.left_length = (int32)(right_string - string);
+    right_string += strlen( delimiter );
+    result.right_string = right_string;
+    result.right_length = length - result.left_length - strlen( delimiter );
+  }
+  return result;
 }
