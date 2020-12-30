@@ -139,6 +139,17 @@ bool hornet_string_add_time( HornetString* string, double time ){
   return true;
 }
 
+bool hornet_string_add_errmsg( HornetString* string ){
+#ifdef C_PLATFORM_WINDOWS
+  return false; // TODO
+#else
+  char errmsg[ 256 ];
+  errmsg[ 0 ] = '\0';
+  strerror_r( errno, errmsg, sizeof( errmsg ) );
+  return string_add( string, "%s", errmsg );
+#endif
+}
+
 void hornet_string_remove( HornetString* string, int32 length ){
   if ( length <= 0 ) return;
   
@@ -150,7 +161,7 @@ void hornet_string_remove( HornetString* string, int32 length ){
   }
 }
 
-void hornet_string_to_lower( HornetString* string, int32 offset, int32 length ){
+void hornet_string_set_lower( HornetString* string, int32 offset, int32 length ){
   if ( string->length <= offset ) return;
   if ( string->length < offset + length ) return;
   
@@ -159,7 +170,7 @@ void hornet_string_to_lower( HornetString* string, int32 offset, int32 length ){
   }
 }
 
-void hornet_string_to_upper( HornetString* string, int32 offset, int32 length ){
+void hornet_string_set_upper( HornetString* string, int32 offset, int32 length ){
   if ( string->length <= offset ) return;
   if ( string->length < offset + length ) return;
   
@@ -168,11 +179,23 @@ void hornet_string_to_upper( HornetString* string, int32 offset, int32 length ){
   }
 }
 
+int32 hornet_string_to_int32( String string ){
+  return strtol( string, null, 0 );
+}
+
+int64 hornet_string_to_int64( String string ){
+  return strtoll( string, null, 0 );
+}
+
+double hornet_string_to_double( String string ){
+  return strtod( string, null );
+}
+
 string hornet_string_get_empty(){
   return s_string_empty;
 }
 
-HornetString hornet_string_fixed( char* fixed_string, int max_size ){
+HornetString hornet_string_fixed( char* fixed_string, int32 max_size ){
   HornetString string;
   string.alignment_size = 0;
   string.max_size = - max_size;
@@ -181,7 +204,7 @@ HornetString hornet_string_fixed( char* fixed_string, int max_size ){
   return string;
 }
 
-HornetStringParseResult hornet_string_parse( String string, String delimiter ){
+HornetStringParseResult hornet_string_split_once( String string, String delimiter ){
   HornetStringParseResult result;
   int32 length = strlen( string );
   result.left_string = string;

@@ -1,6 +1,8 @@
 #ifndef __HORNET_IO_H__
 #define __HORNET_IO_H__
 
+#include <fcntl.h>
+
 struct HornetIO;
 
 typedef enum {
@@ -15,7 +17,7 @@ typedef struct HornetIO {
 #ifdef C_PLATFORM_WINDOWS
   
 #else
-  int32 value;
+  int32                 value;
 #endif
   HornetIOEventCallback event_callback;
   void*                 data;
@@ -29,6 +31,10 @@ C_API_BEGIN
   C_API void hornet_io_set_data( HornetIO* io, void* data );
   
   C_API void* hornet_io_get_data( HornetIO* io );
+  
+  C_API int32 hornet_io_get_flags( HornetIO* io );
+  
+  C_API bool hornet_io_set_flags( HornetIO* io, int32 flags );
 C_API_END
 
 #endif

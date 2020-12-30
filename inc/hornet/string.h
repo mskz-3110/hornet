@@ -54,21 +54,33 @@ C_API_BEGIN
   // [cc:api] bool hornet_string_add_time( IntPtr _string, double time )
   C_API bool hornet_string_add_time( HornetString* string, double time );
   
+  // [cc:api] bool hornet_string_add_errmsg( IntPtr _string )
+  C_API bool hornet_string_add_errmsg( HornetString* string );
+  
   // [cc:api] void hornet_string_remove( IntPtr _string, int length )
   C_API void hornet_string_remove( HornetString* string, int32 length );
   
-  // [cc:api] void hornet_string_to_lower( IntPtr _string, int offset, int length )
-  C_API void hornet_string_to_lower( HornetString* string, int32 offset, int32 length );
+  // [cc:api] void hornet_string_set_lower( IntPtr _string, int offset, int length )
+  C_API void hornet_string_set_lower( HornetString* string, int32 offset, int32 length );
   
-  // [cc:api] void hornet_string_to_upper( IntPtr _string, int offset, int length )
-  C_API void hornet_string_to_upper( HornetString* string, int32 offset, int32 length );
+  // [cc:api] void hornet_string_set_upper( IntPtr _string, int offset, int length )
+  C_API void hornet_string_set_upper( HornetString* string, int32 offset, int32 length );
+  
+  // [cc:api] int hornet_string_to_int32( string _string )
+  C_API int32 hornet_string_to_int32( String string );
+  
+  // [cc:api] long hornet_string_to_int64( string _string )
+  C_API int64 hornet_string_to_int64( String string );
+  
+  // [cc:api] double hornet_string_to_double( string _string )
+  C_API double hornet_string_to_double( String string );
   
   // [cc:api] string hornet_string_get_empty()
   C_API string hornet_string_get_empty();
   
-  C_API HornetString hornet_string_fixed( char* fixed_string, int max_size );
+  C_API HornetString hornet_string_fixed( char* fixed_string, int32 max_size );
   
-  C_API HornetStringParseResult hornet_string_parse( String string, String delimiter );
+  C_API HornetStringParseResult hornet_string_split_once( String string, String delimiter );
 C_API_END
 
 #endif

@@ -14,7 +14,7 @@ typedef enum {
 } HornetSocketAddressType;
 
 typedef struct {
-  HornetSocketAddressType type;
+  int32                   type;
   union {
     struct sockaddr     base;
     struct sockaddr_in  ipv4;
@@ -56,8 +56,8 @@ C_API_BEGIN
   // [cc:api] int hornet_socket_address_get_address_size( IntPtr address )
   C_API int32 hornet_socket_address_get_address_size( HornetSocketAddress* address );
   
-  // [cc:api] void hornet_socket_address_to_string( IntPtr address, IntPtr _string )
-  C_API void hornet_socket_address_to_string( HornetSocketAddress* address, HornetString* string );
+  // [cc:api] void hornet_socket_address_to_string( IntPtr _string, IntPtr address )
+  C_API void hornet_socket_address_to_string( HornetString* string, HornetSocketAddress* address );
   
   // [cc:api] void hornet_socket_address_resolve( string url, ResolveResultCallback result_callback, IntPtr data )
   C_API void hornet_socket_address_resolve( string url, HornetSocketAddressResolveResultCallback result_callback, void* data );

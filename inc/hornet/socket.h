@@ -12,10 +12,10 @@ typedef void (*HornetSocketEventCallback)( struct HornetSocket* socket, int32 ev
 
 typedef struct HornetSocket {
   HornetPoll*               poll;
-  HornetSocketAddress*      self_address;
+  HornetSocketAddress*      address;
   HornetSocketAddress*      peer_address;
+  HornetString*             errmsg;
   HornetIO                  io;
-  uint32                    key;
   HornetSocketEventCallback event_callback;
   void*                     data;
 } HornetSocket;
@@ -43,11 +43,11 @@ C_API_BEGIN
   // [cc:api] IntPtr hornet_socket_get_peer_address( IntPtr socket )
   C_API HornetSocketAddress* hornet_socket_get_peer_address( HornetSocket* socket );
   
+  // [cc:api] string hornet_socket_get_errmsg( IntPtr socket )
+  C_API string hornet_socket_get_errmsg( HornetSocket* socket );
+  
   // [cc:api] IntPtr hornet_socket_get_io( IntPtr socket )
   C_API HornetIO* hornet_socket_get_io( HornetSocket* socket );
-  
-  // [cc:api] uint hornet_socket_get_key( IntPtr socket )
-  C_API uint32 hornet_socket_get_key( HornetSocket* socket );
   
   // [cc:api] void hornet_socket_set_event_callback( IntPtr socket, EventCallback event_callback )
   C_API void hornet_socket_set_event_callback( HornetSocket* socket, HornetSocketEventCallback event_callback );
@@ -91,11 +91,14 @@ C_API_BEGIN
   // [cc:api] bool hornet_socket_get_is_broadcast( IntPtr socket )
   C_API bool hornet_socket_get_is_broadcast( HornetSocket* socket );
   
-  // [cc:api] bool hornet_socket_write( IntPtr socket, IntPtr data, int data_size )
+  // [cc:api] bool hornet_socket_write( IntPtr socket, byte[] data, int data_size )
   C_API bool hornet_socket_write( HornetSocket* socket, void* data, int32 data_size );
   
-  // [cc:api] int hornet_socket_read( IntPtr socket, IntPtr data, int data_size )
+  // [cc:api] int hornet_socket_read( IntPtr socket, byte[] data, int data_size )
   C_API int32 hornet_socket_read( HornetSocket* socket, void* data, int32 data_size );
+  
+  // [cc:api] void hornet_socket_to_string( IntPtr _string, IntPtr socket )
+  C_API void hornet_socket_to_string( HornetString* string, HornetSocket* socket );
 C_API_END
 
 #endif

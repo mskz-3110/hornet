@@ -19,6 +19,10 @@
   #endif
 #endif
 
+#if ! defined( C_PLATFORM_WINDOWS ) && ! defined( C_PLATFORM_ANDROID ) && ! defined( C_PLATFORM_APPLE )
+  #define C_PLATFORM_LINUX
+#endif
+
 #ifndef C_API_BEGIN
   #ifdef __cplusplus
     #define C_API_BEGIN extern "C" {

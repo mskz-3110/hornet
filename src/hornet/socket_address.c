@@ -40,14 +40,14 @@ static HornetSocketAddressResolveResult* socket_address_resolve_result_new( stri
     
     char format[ 8 ];
     HornetStringParseResult parse_result;
-    parse_result = hornet_string_parse( url, "://" );
+    parse_result = hornet_string_split_once( url, "://" );
     snprintf( format, sizeof( format ), "%%.%ds", parse_result.left_length );
     hornet_string_add_string( result->protocol, format, parse_result.left_string );
-    hornet_string_to_lower( result->protocol, 0, parse_result.left_length );
-    parse_result = hornet_string_parse( parse_result.right_string, ";" );
+    hornet_string_set_lower( result->protocol, 0, parse_result.left_length );
+    parse_result = hornet_string_split_once( parse_result.right_string, ";" );
     snprintf( format, sizeof( format ), "%%.%ds", parse_result.left_length );
     hornet_string_add_string( result->host, format, parse_result.left_string );
-    parse_result = hornet_string_parse( parse_result.right_string, "/" );
+    parse_result = hornet_string_split_once( parse_result.right_string, "/" );
     snprintf( format, sizeof( format ), "%%.%ds", parse_result.left_length );
     hornet_string_add_string( result->port, format, parse_result.left_string );
     snprintf( format, sizeof( format ), "%%.%ds", parse_result.right_length );
@@ -59,19 +59,22 @@ static HornetSocketAddressResolveResult* socket_address_resolve_result_new( stri
   return null;
 }
 
-static HornetSocketAddress* socket_address_new( struct addrinfo* info ){
+HornetSocketAddress* hornet_socket_address_new( struct addrinfo* info ){
   HornetSocketAddress* address = (HornetSocketAddress*)C_MEMORY_ALLOCATE( sizeof( HornetSocketAddress ) );
   do{
     if ( null == address ) break;
     
-    switch ( info->ai_socktype ){
-    case SOCK_DGRAM:{ address->type = HORNET_SOCKET_ADDRESS_TYPE_UDP; }break;
-    case SOCK_STREAM:{ address->type = HORNET_SOCKET_ADDRESS_TYPE_TCP; }break;
-    default:{ address->type = HORNET_SOCKET_ADDRESS_TYPE_NONE; }break;
+    if ( null != info ){
+      address->type = info->ai_socktype;
+      address->address_size = info->ai_addrlen;
+      memcpy( &(address->address.base), info->ai_addr, address->address_size );
+    }else{
+      address->type = 0;
+      address->address_size = sizeof( address->address );
     }
-    address->address_size = info->ai_addrlen;
-    memcpy( &(address->address.base), info->ai_addr, address->address_size );
-    address->string = null;
+    address->string = hornet_string_new( 0 );
+    
+    if ( null == address->string ) break;
     
     return address;
   }while ( 0 );
@@ -104,7 +107,11 @@ void hornet_socket_address_delete( HornetSocketAddress* address ){
 }
 
 void hornet_socket_address_set( HornetSocketAddress* _address, HornetSocketAddressType type, void* address, int32 address_size ){
-  _address->type = type;
+  switch ( type ){
+  case HORNET_SOCKET_ADDRESS_TYPE_UDP:{ _address->type = SOCK_DGRAM; }break;
+  case HORNET_SOCKET_ADDRESS_TYPE_TCP:{ _address->type = SOCK_STREAM; }break;
+  default:{ _address->type = 0; }break;
+  }
   if ( sizeof( _address->address ) < address_size ){
     address_size = sizeof( _address->address );
   }else if ( address_size < 0 ){
@@ -114,7 +121,11 @@ void hornet_socket_address_set( HornetSocketAddress* _address, HornetSocketAddre
 }
 
 HornetSocketAddressType hornet_socket_address_get_type( HornetSocketAddress* address ){
-  return address->type;
+  switch ( address->type ){
+  case SOCK_DGRAM: return HORNET_SOCKET_ADDRESS_TYPE_UDP;
+  case SOCK_STREAM: return HORNET_SOCKET_ADDRESS_TYPE_TCP;
+  default: return HORNET_SOCKET_ADDRESS_TYPE_NONE;
+  }
 }
 
 void* hornet_socket_address_get_address( HornetSocketAddress* address ){
@@ -125,35 +136,30 @@ int32 hornet_socket_address_get_address_size( HornetSocketAddress* address ){
   return address->address_size;
 }
 
-void hornet_socket_address_to_string( HornetSocketAddress* address, HornetString* string ){
-  if ( null == address->string ){
-    address->string = hornet_string_new( 0 );
-    if ( null == address->string ) return;
-    
+void hornet_socket_address_to_string( HornetString* string, HornetSocketAddress* address ){
+  if ( 0 == hornet_string_get_length( address->string ) ){
     switch ( address->type ){
-    case HORNET_SOCKET_ADDRESS_TYPE_NONE:{
-      hornet_string_add_string( address->string, "%s/", "   " );
+    case SOCK_DGRAM:{
+      hornet_string_add_string( address->string, "%s://", "udp" );
     }break;
-    case HORNET_SOCKET_ADDRESS_TYPE_UDP:{
-      hornet_string_add_string( address->string, "%s/", "udp" );
+    case SOCK_STREAM:{
+      hornet_string_add_string( address->string, "%s://", "tcp" );
     }break;
-    case HORNET_SOCKET_ADDRESS_TYPE_TCP:{
-      hornet_string_add_string( address->string, "%s/", "tcp" );
-    }break;
+    default: return;
     }
     
     switch ( address->address.base.sa_family ){
     case PF_INET:{
-      char address_string[ INET_ADDRSTRLEN ];
-      inet_ntop( address->address.base.sa_family, &(address->address.ipv4.sin_addr), address_string, sizeof( address_string ) );
-      hornet_string_add_string( address->string, "%s/", address_string );
+      char ip[ INET_ADDRSTRLEN ];
+      inet_ntop( address->address.base.sa_family, &(address->address.ipv4.sin_addr), ip, sizeof( ip ) );
+      hornet_string_add_string( address->string, "%s;", ip );
       hornet_string_add_int32( address->string, "%d", ntohs( address->address.ipv4.sin_port ) );
     }break;
     
     case PF_INET6:{
-      char address_string[ INET6_ADDRSTRLEN ];
-      inet_ntop( address->address.base.sa_family, &(address->address.ipv6.sin6_addr), address_string, sizeof( address_string ) );
-      hornet_string_add_string( address->string, "%s/", address_string );
+      char ip[ INET6_ADDRSTRLEN ];
+      inet_ntop( address->address.base.sa_family, &(address->address.ipv6.sin6_addr), ip, sizeof( ip ) );
+      hornet_string_add_string( address->string, "%s;", ip );
       hornet_string_add_int32( address->string, "%d", ntohs( address->address.ipv6.sin6_port ) );
     }break;
     }
@@ -190,7 +196,7 @@ void hornet_socket_address_resolve( string url, HornetSocketAddressResolveResult
       errcode = getaddrinfo( host, port, &request, &response );
     }
     if ( 0 == errcode ){
-      int addresses_count = 0;
+      int32 addresses_count = 0;
       for ( struct addrinfo* info = response; null != info; info = info->ai_next ){
         ++addresses_count;
       }
@@ -200,7 +206,7 @@ void hornet_socket_address_resolve( string url, HornetSocketAddressResolveResult
       if ( null == result->addresses ) break;
       int32 addresses_index = 0;
       for ( struct addrinfo* info = response; null != info; info = info->ai_next ){
-        result->addresses[ addresses_index++ ] = socket_address_new( info );
+        result->addresses[ addresses_index++ ] = hornet_socket_address_new( info );
         if ( null == result->addresses[ addresses_index - 1 ] ) break;
         
         ++result->addresses_count;
