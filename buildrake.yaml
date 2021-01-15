@@ -101,6 +101,9 @@ buildrake:
         - ./src/hornet/socket.c
         - ./src/hornet/poll.c
         - ./src/hornet/time.c
+        - ./src/hornet/arist.c
+        - ./src/hornet/list.c
+        - ./src/hornet/store.c
       platforms:
         <<: *platforms
 

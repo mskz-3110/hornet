@@ -11,6 +11,9 @@
 #include <hornet/socket.h>
 #include <hornet/poll.h>
 #include <hornet/time.h>
+#include <hornet/arist.h>
+#include <hornet/list.h>
+#include <hornet/store.h>
 
 C_API_BEGIN
   // [cc:api] bool hornet_init()
